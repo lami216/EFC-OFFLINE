@@ -1,0 +1,9 @@
+export type Role='ADMIN'|'REGISTRAR'|'FINANCE';
+export interface Branch{id:string;name:string;code:string;active:boolean}
+export interface Specialty{id:string;name:string;code:string;active:boolean;durationValue:number;durationUnit:'day'|'week'|'month';billingMode:'one_time'|'monthly';courseFee:number;monthlyFee:number}
+export interface PaymentMethod{id:string;name:string;logo?:string;active:boolean}
+export interface Bootstrap{initialized:boolean;branches:Branch[];specialties:Specialty[];paymentMethods:PaymentMethod[];centerName:string}
+export interface RegistrationInput{fullName:string;phone?:string;branchId:string;specialtyId:string;startDate:string;paymentAmount:number;paymentMethodId?:string;notes?:string}
+export interface RegistrationResult{studentId:string;enrollmentId:string;registerNumber:number;receipt?:Receipt}
+export interface Receipt{receiptNumber:number;studentName:string;specialtyName:string;branchName:string;registerNumber:number;amount:number;remaining:number;methodName:string;issuedAt:string;centerName:string}
+export interface Row{[key:string]:string|number|null}
