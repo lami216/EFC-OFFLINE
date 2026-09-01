@@ -23,16 +23,19 @@ pub async fn connect(path: &Path) -> Result<SqlitePool> {
     Ok(pool)
 }
 
-#[cfg(test)]
-pub async fn memory() -> SqlitePool {
+pub async fn fallback_memory() -> Result<SqlitePool> {
     let options = SqliteConnectOptions::new()
         .in_memory(true)
         .foreign_keys(true);
     let pool = SqlitePoolOptions::new()
         .max_connections(1)
         .connect_with(options)
-        .await
-        .unwrap();
-    sqlx::migrate!("./migrations").run(&pool).await.unwrap();
-    pool
+        .await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
+    Ok(pool)
+}
+
+#[cfg(test)]
+pub async fn memory() -> SqlitePool {
+    fallback_memory().await.unwrap()
 }
