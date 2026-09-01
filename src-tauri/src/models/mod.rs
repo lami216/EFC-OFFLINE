@@ -165,7 +165,7 @@ pub struct SpecialtySetting {
     pub branch_ids: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct UserListItem {
     pub id: String,
@@ -176,7 +176,7 @@ pub struct UserListItem {
     pub last_login_at: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterSequenceItem {
     pub branch_id: String,
