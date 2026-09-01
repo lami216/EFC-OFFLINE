@@ -4,6 +4,10 @@ use sqlx::sqlite::SqliteConnectOptions;
 use std::path::Path;
 use tauri::State;
 
+fn sql_path(path: &Path) -> String {
+    path.to_string_lossy().replace('\'', "''")
+}
+
 #[tauri::command]
 pub async fn backup_database(
     state: State<'_, AppState>,
@@ -19,8 +23,7 @@ pub async fn backup_database(
     if path.exists() {
         std::fs::remove_file(path)?;
     }
-    let escaped = destination.replace('\'', "''");
-    sqlx::query(&format!("VACUUM INTO '{}'", escaped))
+    sqlx::query(&format!("VACUUM INTO '{}'", sql_path(path)))
         .execute(&state.pool)
         .await?;
     Ok(destination)
@@ -35,13 +38,11 @@ pub async fn restore_database(
     let s = session(&state, &token)?;
     require_role(&s, &["ADMIN"])?;
     let source_path = Path::new(&source);
-    if !source_path.is_file() {
+    if !source_path.is_file() || source_path == state.db_path.as_path() {
         return Err(AppError::InvalidBackup);
     }
 
-    let options = SqliteConnectOptions::new()
-        .filename(source_path)
-        .read_only(true);
+    let options = SqliteConnectOptions::new().filename(source_path).read_only(true);
     let check = sqlx::SqlitePool::connect_with(options)
         .await
         .map_err(|_| AppError::InvalidBackup)?;
@@ -54,7 +55,19 @@ pub async fn restore_database(
         return Err(AppError::InvalidBackup);
     }
 
-    let pending = state.db_path.with_file_name("restore-pending.sqlite");
+    let app_dir = state.db_path.parent().ok_or(AppError::Validation)?;
+    let safety = app_dir.join(format!(
+        "pre-restore-{}.sqlite",
+        chrono::Local::now().format("%Y-%m-%d-%H%M%S")
+    ));
+    sqlx::query(&format!("VACUUM INTO '{}'", sql_path(&safety)))
+        .execute(&state.pool)
+        .await?;
+
+    let pending = app_dir.join("restore-pending.sqlite");
+    if pending.exists() {
+        std::fs::remove_file(&pending)?;
+    }
     std::fs::copy(source_path, &pending)?;
     Ok(pending.to_string_lossy().into_owned())
 }
