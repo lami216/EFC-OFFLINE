@@ -4,6 +4,8 @@ use serde::Serialize;
 pub enum AppError {
     #[error("تعذر تنفيذ العملية المطلوبة في قاعدة البيانات.")]
     Database(#[from] sqlx::Error),
+    #[error("{0}")]
+    Startup(String),
     #[error("البيانات المدخلة غير صالحة.")]
     Validation,
     #[error("غير مصرح بتنفيذ هذه العملية.")]
