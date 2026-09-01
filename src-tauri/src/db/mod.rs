@@ -26,7 +26,7 @@ pub async fn connect(path: &Path) -> Result<SqlitePool> {
 #[cfg(test)]
 pub async fn memory() -> SqlitePool {
     let options = SqliteConnectOptions::new()
-        .filename(":memory:")
+        .in_memory(true)
         .foreign_keys(true);
     let pool = SqlitePoolOptions::new()
         .max_connections(1)
