@@ -1,3 +1,29 @@
-import {invoke} from '@tauri-apps/api/core'; import type {Bootstrap,RegistrationInput,RegistrationResult,Row} from '../types';
+import{invoke}from'@tauri-apps/api/core';
+import type{AddPaymentInput,Bootstrap,FinanceReport,LoginResult,Receipt,RegistrationInput,RegistrationResult,Row,SettingsSnapshot,StudentDetails}from'../types';
+
 const browser=typeof window!=='undefined'&&!('__TAURI_INTERNALS__' in window);
-export const api={bootstrap:()=>browser?Promise.resolve({initialized:false,branches:[],specialties:[],paymentMethods:[],centerName:''} satisfies Bootstrap):invoke<Bootstrap>('bootstrap'),setup:(v:unknown)=>invoke('first_run_setup',{input:v}),login:(name:string,password:string)=>invoke<string>('login',{name,password}),register:(input:RegistrationInput)=>invoke<RegistrationResult>('register_student',{input}),query:(kind:string,filters:unknown={})=>invoke<Row[]>('query_view',{kind,filters}),saveEntity:(kind:string,value:unknown)=>invoke('save_entity',{kind,value}),voidPayment:(id:string,reason:string)=>invoke('void_payment',{id,reason}),backup:()=>invoke<string>('backup_database'),restore:()=>invoke('restore_database')};
+let sessionToken='';
+
+function authArgs<T extends object>(args:T){
+  if(!sessionToken)throw new Error('انتهت جلسة الدخول. أعد تسجيل الدخول.');
+  return{...args,token:sessionToken};
+}
+
+export const api={
+  bootstrap:()=>browser?Promise.resolve({initialized:false,branches:[],specialties:[],specialtyBranches:[],paymentMethods:[],centerName:'',centerLogoDataUrl:null} satisfies Bootstrap):invoke<Bootstrap>('bootstrap'),
+  setup:(input:unknown)=>invoke('first_run_setup',{input}),
+  login:async(name:string,password:string)=>{const result=await invoke<LoginResult>('login',{name,password});sessionToken=result.token;return result},
+  logout:async()=>{if(sessionToken){const token=sessionToken;sessionToken='';await invoke('logout',{token}).catch(()=>undefined)}},
+  nextRegister:(branchId:string,specialtyId:string)=>invoke<number>('next_register_number',authArgs({branchId,specialtyId})),
+  register:(input:RegistrationInput)=>invoke<RegistrationResult>('register_student',authArgs({input})),
+  addPayment:(input:AddPaymentInput)=>invoke<Receipt>('add_payment',authArgs({input})),
+  receipt:(receiptNumber:number)=>invoke<Receipt>('get_receipt',authArgs({receiptNumber})),
+  studentDetails:(studentId:string)=>invoke<StudentDetails>('student_details',authArgs({studentId})),
+  query:(kind:string,filters:unknown={})=>invoke<Row[]>('query_view',authArgs({kind,filters})),
+  financeReport:(filters:unknown={})=>invoke<FinanceReport>('finance_report',authArgs({filters})),
+  settings:()=>invoke<SettingsSnapshot>('settings_snapshot',authArgs({})),
+  saveEntity:(kind:string,value:unknown)=>invoke('save_entity',authArgs({kind,value})),
+  voidPayment:(id:string,reason:string)=>invoke('void_payment',authArgs({id,reason})),
+  backup:(destination:string)=>invoke<string>('backup_database',authArgs({destination})),
+  restore:(source:string)=>invoke<string>('restore_database',authArgs({source})),
+};
