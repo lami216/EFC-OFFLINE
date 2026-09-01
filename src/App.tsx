@@ -24,7 +24,7 @@ export default function App(){
   if(!user)return <LoginPage data={data} done={setUser}/>;
   const logout=async()=>{await api.logout();setUser(undefined)};
   return <BrowserRouter><Routes><Route element={<Layout data={data} user={user} onLogout={logout}/> }>
-    <Route path="/register" element={user.role==='FINANCE'?<Navigate to="/finance" replace/>:<RegisterPage data={data}/>}/>
+    <Route path="/register" element={user.role==='FINANCE'?<Navigate to="/finance" replace/>:<RegisterPage data={data} user={user}/>}/>
     {['specialties','period','students','status','finance','ledger'].map(k=><Route key={k} path={`/${k}`} element={<DataPage kind={k} data={data} user={user}/>}/>)}
     <Route path="/settings" element={user.role==='ADMIN'?<SettingsPage refreshBootstrap={load}/>:<Navigate to="/finance" replace/>}/>
     <Route path="*" element={<Navigate to={user.role==='FINANCE'?'/finance':'/register'} replace/>}/>
