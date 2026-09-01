@@ -7,6 +7,8 @@ mod services;
 use sqlx::SqlitePool;
 use std::{
     collections::HashMap,
+    fs::OpenOptions,
+    io::Write,
     path::{Path, PathBuf},
     sync::Mutex,
 };
@@ -24,6 +26,26 @@ pub(crate) struct AppState {
     pub pool: SqlitePool,
     pub db_path: PathBuf,
     pub sessions: Mutex<HashMap<String, Session>>,
+    pub startup_error: Option<String>,
+}
+
+fn startup_log_path() -> PathBuf {
+    std::env::temp_dir().join("centre-efc-startup.log")
+}
+
+fn startup_log(message: impl AsRef<str>) {
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(startup_log_path())
+    {
+        let _ = writeln!(
+            file,
+            "{} | {}",
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+            message.as_ref()
+        );
+    }
 }
 
 fn apply_pending_restore(app_dir: &Path, db_path: &Path) -> std::io::Result<()> {
@@ -50,22 +72,50 @@ fn apply_pending_restore(app_dir: &Path, db_path: &Path) -> std::io::Result<()> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tracing_subscriber::fmt::init();
-    tauri::Builder::default()
+    let _ = std::fs::write(startup_log_path(), "");
+    startup_log("starting Centre EFC");
+    let _ = tracing_subscriber::fmt().try_init();
+
+    let result = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
+            startup_log("tauri setup started");
             let app_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_dir)?;
             let db_path = app_dir.join("centre-efc.sqlite");
-            apply_pending_restore(&app_dir, &db_path)?;
-            let pool = tauri::async_runtime::block_on(db::connect(&db_path))
-                .map_err(|e| Box::<dyn std::error::Error>::from(e.to_string()))?;
+            startup_log(format!("database path: {}", db_path.display()));
+
+            if let Err(error) = apply_pending_restore(&app_dir, &db_path) {
+                startup_log(format!("pending restore failed: {error}"));
+            }
+
+            let (pool, startup_error) = match tauri::async_runtime::block_on(db::connect(&db_path)) {
+                Ok(pool) => {
+                    startup_log("persistent database opened successfully");
+                    (pool, None)
+                }
+                Err(error) => {
+                    let message = format!(
+                        "تعذر فتح قاعدة بيانات البرنامج. بياناتك الأصلية لم تُحذف. أغلق البرنامج وأرسل ملف التشخيص centre-efc-startup.log من مجلد Temp للدعم. السبب التقني: {error}"
+                    );
+                    startup_log(format!("persistent database startup failure: {error:?}"));
+                    let fallback = tauri::async_runtime::block_on(db::fallback_memory())
+                        .map_err(|fallback_error| {
+                            startup_log(format!("fallback database startup failure: {fallback_error:?}"));
+                            Box::<dyn std::error::Error>::from(fallback_error.to_string())
+                        })?;
+                    (fallback, Some(message))
+                }
+            };
+
             app.manage(AppState {
                 pool,
                 db_path,
                 sessions: Mutex::new(HashMap::new()),
+                startup_error,
             });
+            startup_log("tauri setup completed");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -86,8 +136,11 @@ pub fn run() {
             commands::backup::backup_database,
             commands::backup::restore_database
         ])
-        .run(tauri::generate_context!())
-        .expect("failed to run Centre EFC")
+        .run(tauri::generate_context!());
+
+    if let Err(error) = result {
+        startup_log(format!("tauri runtime exited with error: {error}"));
+    }
 }
 
 #[cfg(test)]
