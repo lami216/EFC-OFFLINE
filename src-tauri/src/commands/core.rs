@@ -11,6 +11,10 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn bootstrap(state: State<'_, AppState>) -> Result<Bootstrap> {
+    if let Some(message) = &state.startup_error {
+        return Err(AppError::Startup(message.clone()));
+    }
+
     let center = sqlx::query("SELECT center_name,logo_data_url FROM app_settings WHERE id=1")
         .fetch_optional(&state.pool)
         .await?;
