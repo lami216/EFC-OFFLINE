@@ -69,22 +69,22 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            commands::bootstrap,
-            commands::first_run_setup,
-            commands::login,
-            commands::logout,
-            commands::next_register_number,
-            commands::register_student,
-            commands::add_payment,
-            commands::get_receipt,
-            commands::student_details,
-            commands::query_view,
-            commands::finance_report,
-            commands::settings_snapshot,
-            commands::save_entity,
-            commands::void_payment,
-            commands::backup_database,
-            commands::restore_database
+            commands::core::bootstrap,
+            commands::core::first_run_setup,
+            commands::auth::login,
+            commands::auth::logout,
+            commands::auth::next_register_number,
+            commands::core::register_student,
+            commands::core::add_payment,
+            commands::core::get_receipt,
+            commands::core::student_details,
+            commands::query::query_view,
+            commands::finance::finance_report,
+            commands::settings::settings_snapshot,
+            commands::settings::save_entity,
+            commands::core::void_payment,
+            commands::backup::backup_database,
+            commands::backup::restore_database
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Centre EFC")
