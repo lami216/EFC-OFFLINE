@@ -76,6 +76,7 @@ pub struct RegistrationInput {
     pub payment_amount: i64,
     pub payment_method_id: Option<String>,
     pub payment_date: Option<String>,
+    pub payment_description: Option<String>,
     pub notes: Option<String>,
 }
 
