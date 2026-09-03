@@ -15,8 +15,9 @@
     .contact12 img,.logoOnly12 img{width:82px;height:62px;object-fit:contain;object-position:center;display:block}
     .contactText12{display:grid;gap:1px;align-content:center}
     .contactText12>b{display:block;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left}
-    .socialLine12{display:flex;align-items:center;gap:5px;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left;font-weight:700}
-    .socialLine12.teacher12{font-size:9px;font-weight:400;margin-top:2px;direction:rtl;justify-content:flex-end}
+    .socialLine12{display:flex;align-items:center;gap:5px;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left;font-weight:700;justify-content:flex-start}
+    .socialLine12.teacher12{font-size:10px;font-weight:700;margin-top:2px;direction:ltr;justify-content:flex-start}
+    .socialLine12.teacher12 span:last-child{font-weight:700;direction:rtl;unicode-bidi:isolate}
     .socialIcon12{width:14px;height:14px;display:inline-block;flex:0 0 14px;color:#111715}
     .socialIcon12 svg{width:100%;height:100%;display:block;fill:currentColor}
     .center12{text-align:center;direction:rtl}
