@@ -1,4 +1,4 @@
-use super::helpers::{effective_branch, row_value, session, text};
+use super::helpers::{effective_branch, require_role, row_value, session, text};
 use crate::{errors::Result, AppState};
 use chrono::Local;
 use serde_json::Value;
@@ -12,6 +12,11 @@ pub async fn query_view(
     filters: Value,
 ) -> Result<Vec<Value>> {
     let s = session(&state, &token)?;
+    if kind == "ledger" {
+        require_role(&s, &["ADMIN", "FINANCE"])?;
+    } else {
+        require_role(&s, &["ADMIN", "REGISTRAR", "FINANCE"])?;
+    }
     let branch = effective_branch(&s, text(&filters, "branchId"))?;
     let specialty = text(&filters, "specialtyId");
     let q = text(&filters, "q").unwrap_or_default();
