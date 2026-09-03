@@ -33,6 +33,7 @@ jobs:
           node --check demo-repair-v6.js
           node --check demo-receipt-layout-v7.js
           node --check demo-fix-v8.js
+          node --check demo-receipt-logo-v9.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true
