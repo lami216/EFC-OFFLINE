@@ -3,6 +3,7 @@ import{useForm}from'react-hook-form';
 import{LockKeyhole,ShieldCheck}from'lucide-react';
 import{api}from'../lib/api';
 import{Button,Card,Input}from'../components/ui';
+import{EFC_LOGO_DATA_URL}from'../lib/brand';
 import type{Bootstrap,UserSession}from'../types';
 
 type Form={name:string;password:string};
@@ -16,7 +17,7 @@ export function LoginPage({data,done}:{data:Bootstrap;done:(user:UserSession)=>v
     try{const result=await api.login(values.name,values.password);done(result.user)}catch(e){setError(message(e))}
   });
   return <div className="auth-screen"><div className="auth-brand">
-    <div className="auth-mark">{data.centerLogoDataUrl?<img src={data.centerLogoDataUrl}/>:<span>EFC</span>}</div>
+    <div className="auth-mark"><img src={data.centerLogoDataUrl||EFC_LOGO_DATA_URL} alt="EFC"/></div>
     <p><ShieldCheck size={18}/> نظام محلي آمن يعمل دون اتصال</p>
     <h1>{data.centerName||'مركز EFC للتدريب'}</h1>
     <span>إدارة التسجيلات والمدفوعات والدورات والفروع من مكان واحد.</span>
