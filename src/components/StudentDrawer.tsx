@@ -11,6 +11,39 @@ import type{BillingPeriod,Bootstrap,Receipt,StudentDetails,StudentEnrollment,Use
 const errorText=(e:unknown)=>typeof e==='string'?e:e instanceof Error?e.message:'تعذر تحميل ملف الطالب.';
 const statusLabel:Record<string,string>={active:'نشطة',cancelled:'ملغاة',paid:'مدفوع',partial:'دفع جزئي',due:'مستحق',overdue:'متأخر',upcoming:'لم يحن بعد'};
 const today=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const detailsLightCss=`
+.student-details-light{
+  --surface:#fff;
+  --surface-2:#f7f9fb;
+  --bg:#fff;
+  --text:#172622;
+  --muted:#66756f;
+  --border:#dfe5e1;
+  --primary:#155ea8;
+  --primary-strong:#0d477f;
+  --primary-soft:#eaf3fb;
+  background:#fff!important;
+  color:#172622!important;
+  border:1px solid #dfe5e1;
+}
+.student-details-light>header{background:#fff!important;color:#172622!important;box-shadow:0 1px 0 #edf0ef}
+.student-details-light .drawer-content{background:#fff!important}
+.student-details-light .student-hero{background:#fff!important;color:#172622!important;border:1px solid #dfe5e1!important;box-shadow:none!important}
+.student-details-light .student-hero h3{color:#172622!important}
+.student-details-light .student-hero p{color:#66756f!important}
+.student-details-light .student-avatar{background:#eaf3fb!important;color:#155ea8!important;border:1px solid #cfe0ef}
+.student-details-light .student-hero .button{background:#155ea8!important;color:#fff!important}
+.student-details-light .drawer-section-title h3{color:#172622!important}
+.student-details-light .enrollment-card,
+.student-details-light .period-list,
+.student-details-light .payment-list,
+.student-details-light .note-box{background:#fff!important;border-color:#dfe5e1!important;box-shadow:0 3px 12px rgba(13,53,88,.035)}
+.student-details-light .mini-grid>span{background:#f7f9fb!important;color:#172622!important;border:1px solid #edf0ef}
+.student-details-light .period-list>div,
+.student-details-light .payment-list>div{background:#fff!important;color:#172622!important}
+.student-details-light .row-actions button{background:#f7f9fb!important;color:#172622!important;border-color:#dfe5e1!important}
+.student-details-light .note-box p{color:#66756f!important}
+`;
 function suggestion(enrollment:StudentEnrollment,period:BillingPeriod|undefined,amount:number){if(enrollment.billingMode==='monthly'&&period){return amount>=period.remaining?`مدفوع الشهر ${period.periodNumber} لدورة ${enrollment.specialtyName}`:`مدفوع جزئي من الشهر ${period.periodNumber} لدورة ${enrollment.specialtyName}`}return amount>=enrollment.remaining?`مدفوع كامل لدورة ${enrollment.specialtyName}`:`مدفوع جزئي لدورة ${enrollment.specialtyName}`}
 
 export function StudentDrawer({studentId,data,user,autoOpenPayment=false,onClose}:{studentId:string;data:Bootstrap;user:UserSession;autoOpenPayment?:boolean;onClose:()=>void}){
@@ -50,7 +83,7 @@ export function StudentDrawer({studentId,data,user,autoOpenPayment=false,onClose
   async function reprint(number?:number|null){if(!number)return;try{setReceipt(await api.receipt(number))}catch(e){toast.error(errorText(e))}}
   async function voidPayment(id:string){const reason=window.prompt('اكتب سبب إلغاء الدفعة. لن يتم حذفها من السجل:');if(!reason)return;try{await api.voidPayment(id,reason);await load();toast.success('تم إلغاء الدفعة مع الاحتفاظ بسجلها.')}catch(e){toast.error(errorText(e))}}
 
-  return <><div className="drawer-backdrop" style={{display:'grid',placeItems:'center',padding:'24px'}} onMouseDown={onClose}><aside className="student-drawer" style={{position:'relative',left:'auto',top:'auto',bottom:'auto',width:'min(980px,92vw)',maxHeight:'90vh',borderRadius:'16px',overflow:'auto',boxShadow:'0 24px 70px #001b1550'}} onMouseDown={e=>e.stopPropagation()}><header><div><p>ملف الطالب</p><h2>{details?.student.fullName||'جارٍ التحميل…'}</h2></div><button className="icon-button" onClick={onClose}><X/></button></header>
+  return <><style>{detailsLightCss}</style><div className="drawer-backdrop" style={{display:'grid',placeItems:'center',padding:'24px'}} onMouseDown={onClose}><aside className="student-drawer student-details-light" style={{position:'relative',left:'auto',top:'auto',bottom:'auto',width:'min(980px,92vw)',maxHeight:'90vh',borderRadius:'16px',overflow:'auto',boxShadow:'0 24px 70px #001b1550'}} onMouseDown={e=>e.stopPropagation()}><header><div><p>ملف الطالب</p><h2>{details?.student.fullName||'جارٍ التحميل…'}</h2></div><button className="icon-button" onClick={onClose}><X/></button></header>
     {loading?<div className="drawer-loading"><span className="loader"/>جارٍ تحميل الملف…</div>:error?<div className="drawer-error"><p>{error}</p><Button onClick={()=>void load()}><RefreshCw size={16}/>إعادة المحاولة</Button></div>:details?<div className="drawer-content">
       <section className="student-hero"><div className="student-avatar">{details.student.fullName.slice(0,1)}</div><div><h3>{details.student.fullName}</h3><p><Phone size={15}/>{details.student.phone||'لا يوجد رقم هاتف'}{details.student.secondaryPhone&&` · ${details.student.secondaryPhone}`}</p></div>{payable.length>0&&<Button onClick={()=>setPaymentOpen(true)}><PlusCircle size={16}/>تسجيل دفعة</Button>}</section>
       <section><div className="drawer-section-title"><BookOpen size={17}/><h3>الدورات والتسجيلات</h3></div><div className="enrollment-cards">{details.enrollments.map(e=><article key={e.id} className="enrollment-card"><div className="enrollment-head"><div><b>{e.specialtyName}</b><span>{e.branchName} · سجل {String(e.registerNumber).padStart(4,'0')}</span></div><span className={`status ${e.status}`}>{statusLabel[e.status]||e.status}</span></div><div className="mini-grid"><span><small>البداية</small>{date(`${e.startDate}T12:00:00`)}</span><span><small>النهاية</small>{date(`${e.endDate}T12:00:00`)}</span><span><small>المطلوب</small>{money(e.totalRequired)}</span><span><small>المدفوع</small>{money(e.paid)}</span><span><small>المتبقي من الدورة</small><b>{money(e.remaining)}</b></span><span><small>النظام</small>{e.billingMode==='monthly'?'شهري':'دفعة واحدة'}</span></div>{e.billingMode==='monthly'&&<div className="enrollment-actions"><Button className="secondary" onClick={()=>setStatementId(e.id)}><FileText size={15}/>كشف الأشهر</Button></div>}</article>)}</div></section>
