@@ -6,10 +6,10 @@ export interface PaymentMethod{id:string;name:string;logoDataUrl?:string|null;ac
 export interface Bootstrap{initialized:boolean;branches:Branch[];specialties:Specialty[];specialtyBranches:SpecialtyBranch[];paymentMethods:PaymentMethod[];centerName:string;centerLogoDataUrl?:string|null}
 export interface UserSession{id:string;name:string;role:Role;branchId?:string|null}
 export interface LoginResult{token:string;user:UserSession}
-export interface RegistrationInput{fullName:string;phone?:string;secondaryPhone?:string;branchId:string;specialtyId:string;startDate:string;paymentAmount:number;paymentMethodId?:string;notes?:string}
-export interface AddPaymentInput{enrollmentId:string;amount:number;paymentMethodId:string;description?:string}
+export interface RegistrationInput{fullName:string;phone?:string;secondaryPhone?:string;branchId:string;specialtyId:string;startDate:string;paymentAmount:number;paymentMethodId?:string;paymentDate?:string;notes?:string}
+export interface AddPaymentInput{enrollmentId:string;amount:number;paymentMethodId:string;paymentDate?:string;description?:string}
 export interface RegistrationResult{studentId:string;enrollmentId:string;registerNumber:number;receipt?:Receipt}
-export interface Receipt{receiptNumber:number;studentName:string;specialtyName:string;branchName:string;registerNumber:number;amount:number;remaining:number;methodName:string;issuedAt:string;centerName:string;centerPhone1?:string|null;centerPhone2?:string|null;centerAddress?:string|null;centerLogoDataUrl?:string|null;periodLabel?:string|null}
+export interface Receipt{receiptNumber:number;studentName:string;specialtyName:string;branchName:string;registerNumber:number;amount:number;remaining:number;methodName:string;issuedAt:string;centerName:string;centerPhone1?:string|null;centerPhone2?:string|null;centerAddress?:string|null;centerLogoDataUrl?:string|null;periodLabel?:string|null;description?:string|null}
 export interface CenterSettings{centerName:string;phone1:string;phone2?:string|null;address?:string|null;logoDataUrl?:string|null;endingSoonDays:number;receiptLast:number}
 export interface SpecialtySetting extends Specialty{description?:string|null;branchIds:string[]}
 export interface UserListItem{id:string;name:string;role:Role;branchId?:string|null;active:boolean;lastLoginAt?:string|null}
