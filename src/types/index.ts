@@ -6,7 +6,7 @@ export interface PaymentMethod{id:string;name:string;logoDataUrl?:string|null;ac
 export interface Bootstrap{initialized:boolean;branches:Branch[];specialties:Specialty[];specialtyBranches:SpecialtyBranch[];paymentMethods:PaymentMethod[];centerName:string;centerLogoDataUrl?:string|null}
 export interface UserSession{id:string;name:string;role:Role;branchId?:string|null}
 export interface LoginResult{token:string;user:UserSession}
-export interface RegistrationInput{fullName:string;phone?:string;secondaryPhone?:string;branchId:string;specialtyId:string;startDate:string;paymentAmount:number;paymentMethodId?:string;paymentDate?:string;notes?:string}
+export interface RegistrationInput{fullName:string;phone?:string;secondaryPhone?:string;branchId:string;specialtyId:string;startDate:string;paymentAmount:number;paymentMethodId?:string;paymentDate?:string;paymentDescription?:string;notes?:string}
 export interface AddPaymentInput{enrollmentId:string;amount:number;paymentMethodId:string;paymentDate?:string;description?:string}
 export interface RegistrationResult{studentId:string;enrollmentId:string;registerNumber:number;receipt?:Receipt}
 export interface Receipt{receiptNumber:number;studentName:string;specialtyName:string;branchName:string;registerNumber:number;amount:number;remaining:number;methodName:string;issuedAt:string;centerName:string;centerPhone1?:string|null;centerPhone2?:string|null;centerAddress?:string|null;centerLogoDataUrl?:string|null;periodLabel?:string|null;description?:string|null}
