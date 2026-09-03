@@ -1,0 +1,1 @@
+document.getElementById('app')?.replaceChildren(document.createTextNode('جاري تجهيز نسخة العرض…'));
