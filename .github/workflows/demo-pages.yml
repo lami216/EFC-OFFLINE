@@ -22,6 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate demo JavaScript
+        run: |
+          node --check demo-app.js
+          node --check demo-period-merge.js
+          node --check demo-monthly-finance-v3.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true
