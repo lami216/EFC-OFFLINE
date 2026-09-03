@@ -12,7 +12,6 @@ import type{Bootstrap,ChartPoint,FinanceReport,PaymentMethod,Row,UserSession}fro
 
 const localIso=(d:Date)=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>localIso(new Date());
-const monthStart=()=>`${today().slice(0,8)}01`;
 const moneyColumns=new Set(['المبلغ','المطلوب','المدفوع','المتبقي','المحصل']);
 const errorText=(e:unknown)=>typeof e==='string'?e:e instanceof Error?e.message:'تعذر جلب البيانات.';
 
@@ -36,7 +35,7 @@ function renderValue(key:string,value:string|number|null){
   if(typeof value==='number')return digits(value);
   const text=digits(String(value));
   if((text.includes('مدفوع')||text.includes('كل الأشهر مدفوعة')||text==='نشطة')&&!text.includes('جزئي'))return <span className="status paid">{text}</span>;
-  if(text.includes('متأخر')||['ملغاة','انتهت','لم يدفع'].includes(text))return <span className="status overdue">{text}</span>;
+  if(text.includes('متأخر')||['ملغاة','انتهت','لم يدفع','غير مدفوع'].includes(text))return <span className="status overdue">{text}</span>;
   if(text.includes('مستحق')||text.includes('جزئي')||text.includes('ستنتهي'))return <span className="status due">{text}</span>;
   return text;
 }
@@ -76,12 +75,12 @@ function SpecialtiesPage({data,user,onStudent}:{data:Bootstrap;user:UserSession;
 const periodTabs=[['registrations','المسجلون'],['payments','الدفعات'],['dues','المستحقات'],['ended','نهايات الدورات']] as const;
 const dueStates=new Set(['متأخر','مستحق الآن','دفع جزئي','لم يدفع']);
 function PeriodPage({data,user,onStudent,onPay}:{data:Bootstrap;user:UserSession;onStudent:(id:string)=>void;onPay:(id:string)=>void}){
-  const[from,setFrom]=useState(monthStart());const[to,setTo]=useState(today());const[q,setQ]=useState('');const[branchId,setBranch]=useState(user.branchId||'');const[specialtyId,setSpecialty]=useState('');const[financial,setFinancial]=useState('');const[tab,setTab]=useState<(typeof periodTabs)[number][0]>('registrations');
+  const[from,setFrom]=useState('');const[to,setTo]=useState('');const[q,setQ]=useState('');const[branchId,setBranch]=useState(user.branchId||'');const[specialtyId,setSpecialty]=useState('');const[financial,setFinancial]=useState('');const[tab,setTab]=useState<(typeof periodTabs)[number][0]>('registrations');
   const result=useRows(`period_${tab}`,{from,to,q,branchId,specialtyId});
   const statusResult=useRows('status',{q,branchId,specialtyId});
   const allowedIds=useMemo(()=>{if(!financial)return null;return new Set(statusResult.rows.filter(r=>financial==='all_due'?dueStates.has(String(r['الوضعية المالية'])):String(r['الوضعية المالية'])===financial).map(r=>String(r._studentId||'')))},[statusResult.rows,financial]);
   const rows=useMemo(()=>allowedIds?result.rows.filter(r=>allowedIds.has(String(r._studentId||''))):result.rows,[result.rows,allowedIds]);
-  return <><PageHeader title="آلية البحث" description="المسجلون والدفعات والمستحقات ونهايات الدورات في مكان واحد مع بحث وفلاتر موحدة." action={<Button className="secondary" onClick={()=>void exportCsv(rows,`تقرير-${tab}-${from}-${to}`)}><Download size={16}/>تصدير</Button>}/><Card><div className="period-search"><div className="search-input"><Search size={17}/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو رقم السجل"/></div><BranchSelect data={data} user={user} value={branchId} onChange={setBranch}/><SpecialtySelect data={data} value={specialtyId} onChange={setSpecialty}/><select value={financial} onChange={e=>setFinancial(e.target.value)}><option value="">كل الحالات</option><option value="all_due">كل المستحقات</option><option value="متأخر">متأخر</option><option value="مستحق الآن">مستحق الآن</option><option value="دفع جزئي">دفع جزئي</option><option value="لم يدفع">لم يدفع</option><option value="مدفوع كامل">مدفوع كامل</option></select></div><div className="filter-grid two period-dates"><label>من تاريخ<Input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>إلى تاريخ<Input type="date" value={to} onChange={e=>setTo(e.target.value)}/></label></div><div className="segmented">{periodTabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</div>{result.loading||financial&&statusResult.loading?<LoadingBlock/>:result.error?<ErrorBlock text={result.error}/>:statusResult.error&&financial?<ErrorBlock text={statusResult.error}/>:<DataTable rows={rows} onStudent={onStudent} onPay={tab==='payments'?undefined:onPay}/>}</Card></>
+  return <div className="period-page"><PageHeader title="آلية البحث" description="المسجلون والدفعات والمستحقات ونهايات الدورات في مكان واحد مع بحث وفلاتر موحدة." action={<Button className="secondary" onClick={()=>void exportCsv(rows,`تقرير-${tab}-${from||'الكل'}-${to||'الكل'}`)}><Download size={16}/>تصدير</Button>}/><Card className="period-card"><div className="period-search"><div className="search-input"><Search size={17}/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="ابحث بالاسم أو الهاتف أو رقم السجل"/></div><BranchSelect data={data} user={user} value={branchId} onChange={setBranch}/><SpecialtySelect data={data} value={specialtyId} onChange={setSpecialty}/><select value={financial} onChange={e=>setFinancial(e.target.value)}><option value="">كل الحالات</option><option value="all_due">كل المستحقات</option><option value="متأخر">متأخر</option><option value="مستحق الآن">مستحق الآن</option><option value="دفع جزئي">دفع جزئي</option><option value="لم يدفع">لم يدفع</option><option value="مدفوع كامل">مدفوع كامل</option></select></div><div className="filter-grid two period-dates"><label>من تاريخ<Input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>إلى تاريخ<Input type="date" value={to} onChange={e=>setTo(e.target.value)}/></label></div><div className="segmented">{periodTabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</div>{result.loading||financial&&statusResult.loading?<LoadingBlock/>:result.error?<ErrorBlock text={result.error}/>:statusResult.error&&financial?<ErrorBlock text={statusResult.error}/>:<DataTable rows={rows} onStudent={onStudent} onPay={tab==='payments'?undefined:onPay}/>}</Card></div>
 }
 
 function StatusPage({data,user,onStudent}:{data:Bootstrap;user:UserSession;onStudent:(id:string)=>void}){
