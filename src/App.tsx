@@ -11,6 +11,9 @@ import{LoginPage}from'./pages/LoginPage';
 import{Button}from'./components/ui';
 
 const errorText=(e:unknown)=>typeof e==='string'?e:e instanceof Error?e.message:'تعذر فتح قاعدة البيانات المحلية.';
+const registrarPages=new Set(['register','specialties','period','students','status']);
+const financePages=new Set(['specialties','period','students','status','finance','ledger']);
+function canAccess(role:UserSession['role'],page:string){if(role==='ADMIN')return true;if(role==='REGISTRAR')return registrarPages.has(page);return financePages.has(page)}
 
 export default function App(){
   const[data,setData]=useState<Bootstrap>();
@@ -23,10 +26,12 @@ export default function App(){
   if(!data.initialized)return <SetupPage done={()=>void load()}/>;
   if(!user)return <LoginPage data={data} done={setUser}/>;
   const logout=async()=>{await api.logout();setUser(undefined)};
+  const home=user.role==='FINANCE'?'/finance':'/register';
+  const guard=(page:string,node:React.ReactNode)=>canAccess(user.role,page)?node:<Navigate to={home} replace/>;
   return <BrowserRouter><Routes><Route element={<Layout data={data} user={user} onLogout={logout}/> }>
-    <Route path="/register" element={user.role==='FINANCE'?<Navigate to="/finance" replace/>:<RegisterPage data={data} user={user}/>}/>
-    {['specialties','period','students','status','finance','ledger'].map(k=><Route key={k} path={`/${k}`} element={<DataPage kind={k} data={data} user={user} refreshBootstrap={load}/>}/>)}
-    <Route path="/settings" element={user.role==='ADMIN'?<SettingsPage refreshBootstrap={load}/>:<Navigate to="/finance" replace/>}/>
-    <Route path="*" element={<Navigate to={user.role==='FINANCE'?'/finance':'/register'} replace/>}/>
+    <Route path="/register" element={guard('register',<RegisterPage data={data} user={user}/>)}/>
+    {['specialties','period','students','status','finance','ledger'].map(k=><Route key={k} path={`/${k}`} element={guard(k,<DataPage kind={k} data={data} user={user} refreshBootstrap={load}/>)}/>)}
+    <Route path="/settings" element={user.role==='ADMIN'?<SettingsPage refreshBootstrap={load}/>:<Navigate to={home} replace/>}/>
+    <Route path="*" element={<Navigate to={home} replace/>}/>
   </Route></Routes></BrowserRouter>
 }
