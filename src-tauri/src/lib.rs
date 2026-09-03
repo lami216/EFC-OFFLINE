@@ -177,6 +177,8 @@ mod tests {
             start_date: "2026-09-10".into(),
             payment_amount: pay,
             payment_method_id: Some("cash".into()),
+            payment_date: None,
+            payment_description: None,
             notes: None,
         }
     }
@@ -225,6 +227,7 @@ mod tests {
                 enrollment_id: r.enrollment_id,
                 amount: 2500,
                 payment_method_id: "cash".into(),
+                payment_date: None,
                 description: Some("دفعة لاحقة".into()),
             },
             "u",
