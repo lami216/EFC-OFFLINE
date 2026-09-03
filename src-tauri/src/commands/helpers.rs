@@ -24,6 +24,9 @@ pub(crate) fn require_role(s: &Session, roles: &[&str]) -> Result<()> {
 }
 
 pub(crate) fn effective_branch(s: &Session, requested: Option<String>) -> Result<Option<String>> {
+    if s.role == "ADMIN" {
+        return Ok(requested.filter(|x| !x.trim().is_empty()));
+    }
     if let Some(own) = &s.branch_id {
         if requested.as_ref().is_some_and(|value| value != own) {
             return Err(AppError::Unauthorized);
