@@ -13,15 +13,22 @@
     .head12{display:grid;grid-template-columns:240px 1fr 150px;gap:14px;align-items:center;border-bottom:1px solid #b2b8b5;padding-bottom:6px}
     .contact12{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:center;direction:ltr;text-align:left}
     .contact12 img,.logoOnly12 img{width:82px;height:62px;object-fit:contain;object-position:center;display:block}
-    .contact12 b{display:block;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left}
-    .contact12 small{font-size:9px;display:block;margin-top:2px}
-    .center12{text-align:center;direction:rtl}.center12 h1{margin:0;font-size:27px;line-height:1}.center12 .tag12{font-size:11px;font-weight:700;margin-top:3px}
+    .contactText12{display:grid;gap:1px;align-content:center}
+    .contactText12>b{display:block;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left}
+    .socialLine12{display:flex;align-items:center;gap:5px;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left;font-weight:700}
+    .socialLine12.teacher12{font-size:9px;font-weight:400;margin-top:2px;direction:rtl;justify-content:flex-end}
+    .socialIcon12{width:14px;height:14px;display:inline-block;flex:0 0 14px;color:#111715}
+    .socialIcon12 svg{width:100%;height:100%;display:block;fill:currentColor}
+    .center12{text-align:center;direction:rtl}
+    .center12 h1{margin:0;font-size:27px;line-height:1}
+    .title12{display:flex;direction:ltr;justify-content:center;align-items:baseline;gap:12px;white-space:nowrap}
+    .title12 .enTitle12{direction:ltr}.title12 .arTitle12{direction:rtl}
+    .center12 .tag12{font-size:11px;font-weight:700;margin-top:3px}
     .rn12{display:flex;direction:ltr;justify-content:center;align-items:center;gap:9px;margin-top:4px;font-size:17px}.rn12 b{font-size:21px}
     .logoOnly12{height:66px;display:grid;place-items:center}
     .meta12{display:flex;justify-content:space-between;align-items:center;gap:24px;direction:ltr;padding:6px 0 3px;font-size:11px}
     .meta12 .branch12{direction:rtl;text-align:right}.meta12 .branch12 b{font-size:13px;font-weight:900;color:#0b2e24}
     .meta12 .date12{direction:rtl;text-align:left}.meta12 .date12 b{font-weight:800}
-    .recognition12{text-align:center;direction:rtl;font-size:11px;font-weight:800;margin:2px 0 4px}
     .row12{display:grid;grid-template-columns:145px minmax(0,1fr) 135px;gap:8px;align-items:center;height:31px;font-size:13px;direction:ltr}
     .fr12{text-align:left;direction:ltr;font-weight:700}.ar12{text-align:right;direction:rtl;font-weight:800}
     .track12{position:relative;height:26px;display:flex;align-items:center;justify-content:center;min-width:0}
@@ -44,9 +51,12 @@
   const row12 = (fr,val,ar,cls='') => `<div class="row12 ${cls}"><span class="fr12">${fr}</span>${track12(val)}<span class="ar12">${ar}</span></div>`;
   const half12 = (fr,val,ar,cls='') => `<div class="half12 ${cls}"><span class="fr12">${fr}</span>${track12(val, cls==='reg12'?'regTrack12':'')}<span class="ar12">${ar}</span></div>`;
 
+  const whatsappIcon12 = () => `<span class="socialIcon12" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16.05 3.2A12.65 12.65 0 0 0 5.2 22.34L3.5 28.5l6.3-1.65a12.63 12.63 0 1 0 6.25-23.65Zm0 22.98a10.4 10.4 0 0 1-5.3-1.45l-.38-.23-3.74.98 1-3.64-.25-.38a10.42 10.42 0 1 1 8.67 4.72Zm5.72-7.8c-.31-.16-1.85-.91-2.14-1.02-.28-.1-.49-.16-.7.16-.2.31-.8 1.02-.98 1.23-.18.2-.36.23-.67.08-.31-.16-1.31-.48-2.5-1.54-.92-.82-1.55-1.84-1.73-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.55.16-.18.2-.31.31-.52.1-.2.05-.39-.03-.55-.08-.16-.7-1.68-.96-2.3-.25-.6-.51-.52-.7-.53h-.6c-.2 0-.54.08-.83.39-.28.31-1.08 1.05-1.08 2.57 0 1.51 1.1 2.98 1.26 3.18.16.2 2.17 3.31 5.25 4.64.73.32 1.3.5 1.75.64.74.23 1.4.2 1.93.12.59-.09 1.85-.76 2.11-1.49.26-.73.26-1.36.18-1.49-.08-.13-.29-.2-.6-.36Z"/></svg></span>`;
+  const facebookIcon12 = () => `<span class="socialIcon12" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M18.3 29V17.1h4l.6-4.7h-4.6v-3c0-1.35.37-2.28 2.32-2.28H23V2.94c-.41-.06-1.82-.18-3.47-.18-3.44 0-5.8 2.1-5.8 5.96v3.68H9.84v4.7h3.89V29h4.57Z"/></svg></span>`;
+
   function head12(r){
     const src=logo12(); const img=`<img src="${src}" alt="EFC">`;
-    return `<div class="head12"><div class="contact12">${img}<div><b>Tél: 48 02 84 84</b><b>☎ 32 09 86 89</b><small>الأستاذ محمد لمين</small></div></div><div class="center12"><h1>Centre EFC &nbsp; مركز</h1><div class="tag12">جميع الشهادات معترف بها من طرف الدولة</div><div class="rn12"><span>Reçu N°</span><b>${westernDigitsV3(r.receipt||'')}</b><span>وصل رقم</span></div></div><div class="logoOnly12">${img}</div></div>`;
+    return `<div class="head12"><div class="contact12">${img}<div class="contactText12"><b>Tél: 48 02 84 84</b><div class="socialLine12">${whatsappIcon12()}<span>32 09 86 89</span></div><div class="socialLine12 teacher12">${facebookIcon12()}<span>الأستاذ محمد ديدي</span></div></div></div><div class="center12"><h1 class="title12"><span class="enTitle12">Centre EFC</span><span class="arTitle12">مركز</span></h1><div class="tag12">جميع الشهادات معترف بها من طرف الدولة</div><div class="rn12"><span>Reçu N°</span><b>${westernDigitsV3(r.receipt||'')}</b><span>وصل رقم</span></div></div><div class="logoOnly12">${img}</div></div>`;
   }
 
   function meta12(r){
@@ -63,9 +73,9 @@
     const h=head12(r);
     if(r.statement){
       const rows=(r.plan||[]).map(m=>{const st=m.state==='paid'?'مدفوع':m.state==='partial'?'دفع جزئي':m.state==='overdue'?'متأخر':m.state==='due'?'مستحق':'لم يحن';return `<tr><td>الشهر ${westernDigitsV3(m.number)}</td><td>${fmtDateV3(m.dueDate)}</td><td>${moneyV3(m.fee)}</td><td>${moneyV3(m.paid)}</td><td>${moneyV3(m.remaining)}</td><td>${st}</td></tr>`}).join('');
-      return `${h}${meta12(r)}<div class="recognition12">جميع الشهادات معترف بها من طرف الدولة</div>${row12("Nom de l’étudiant",r.student,'اسم الطالب')}${row12('Filière',r.specialty,'تخصص')}<div class="pair12">${half12('N° Registre',westernDigitsV3(r.reg),'رقم السجل','reg12')}${half12('Montant',moneyV3(r.paid),'إجمالي المدفوع')}</div><table class="mt12"><thead><tr><th>الشهر</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table><div class="tot12"><b>إجمالي المدفوع: ${moneyV3(r.paid)}</b><b>المتبقي من الدورة: ${moneyV3(r.remaining)}</b></div><p class="note12">ملاحظة 1: لا يمكن استرجاع المبلغ المدفوع للمركز في أي حال من الأحوال.</p>`;
+      return `${h}${meta12(r)}${row12("Nom de l’étudiant",r.student,'اسم الطالب')}${row12('Filière',r.specialty,'تخصص')}<div class="pair12">${half12('N° Registre',westernDigitsV3(r.reg),'رقم السجل','reg12')}${half12('Montant',moneyV3(r.paid),'إجمالي المدفوع')}</div><table class="mt12"><thead><tr><th>الشهر</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table><div class="tot12"><b>إجمالي المدفوع: ${moneyV3(r.paid)}</b><b>المتبقي من الدورة: ${moneyV3(r.remaining)}</b></div><p class="note12">ملاحظة 1: لا يمكن استرجاع المبلغ المدفوع للمركز في أي حال من الأحوال.</p>`;
     }
-    return `${h}${meta12(r)}<div class="recognition12">جميع الشهادات معترف بها من طرف الدولة</div>${row12("Nom de l’étudiant",r.student,'اسم الطالب')}${row12('Filière',r.specialty,'تخصص')}<div class="pair12">${half12('Reliquat',moneyV3(r.remaining),'المبلغ المتبقي')}${half12('Montant',moneyV3(r.amount),'المبلغ')}</div><div class="pair12">${half12('Mois',westernDigitsV3(r.month||'—'),'الشهر')}${half12('N° Registre',westernDigitsV3(r.reg),'رقم السجل','reg12')}</div><div class="desc12">${row12('Libellé',r.desc||'','البيان')}</div><p class="note12">ملاحظة 1: لا يمكن استرجاع المبلغ المدفوع للمركز في أي حال من الأحوال.</p><div class="methods12">${methods12(r.method)}</div>`;
+    return `${h}${meta12(r)}${row12("Nom de l’étudiant",r.student,'اسم الطالب')}${row12('Filière',r.specialty,'تخصص')}<div class="pair12">${half12('Reliquat',moneyV3(r.remaining),'المبلغ المتبقي')}${half12('Montant',moneyV3(r.amount),'المبلغ')}</div><div class="pair12">${half12('Mois',westernDigitsV3(r.month||'—'),'الشهر')}${half12('N° Registre',westernDigitsV3(r.reg),'رقم السجل','reg12')}</div><div class="desc12">${row12('Libellé',r.desc||'','البيان')}</div><p class="note12">ملاحظة 1: لا يمكن استرجاع المبلغ المدفوع للمركز في أي حال من الأحوال.</p><div class="methods12">${methods12(r.method)}</div>`;
   }
 
   function load12(src,key){return new Promise((res,rej)=>{if(window[key])return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)});}
