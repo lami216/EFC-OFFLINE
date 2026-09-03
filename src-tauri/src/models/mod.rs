@@ -75,6 +75,7 @@ pub struct RegistrationInput {
     pub start_date: String,
     pub payment_amount: i64,
     pub payment_method_id: Option<String>,
+    pub payment_date: Option<String>,
     pub notes: Option<String>,
 }
 
@@ -84,6 +85,7 @@ pub struct AddPaymentInput {
     pub enrollment_id: String,
     pub amount: i64,
     pub payment_method_id: String,
+    pub payment_date: Option<String>,
     pub description: Option<String>,
 }
 
@@ -110,6 +112,8 @@ pub struct ReceiptDto {
     pub center_logo_data_url: Option<String>,
     #[serde(default)]
     pub period_label: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 #[derive(Serialize)]
