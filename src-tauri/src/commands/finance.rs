@@ -1,4 +1,4 @@
-use super::helpers::{effective_branch, session, text};
+use super::helpers::{effective_branch, require_role, session, text};
 use crate::{errors::Result, models::*, AppState};
 use serde_json::Value;
 use sqlx::Row;
@@ -11,6 +11,7 @@ pub async fn finance_report(
     filters: Value,
 ) -> Result<FinanceReport> {
     let s = session(&state, &token)?;
+    require_role(&s, &["ADMIN", "FINANCE"])?;
     let branch = effective_branch(&s, text(&filters, "branchId"))?;
     let specialty = text(&filters, "specialtyId");
     let method = text(&filters, "paymentMethodId");
