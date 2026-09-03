@@ -16,9 +16,10 @@ export default tseslint.config(
       // not runtime correctness failures for this app, so keep them out of CI.
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/incompatible-library': 'off',
-      // Preserve strict unused-variable checking while allowing the currently
-      // staged CalendarRange icon until its UI action is wired.
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^CalendarRange$' }],
+      '@typescript-eslint/no-unused-vars': 'error',
+      // Short-circuit guards are intentionally used in click handlers where an
+      // optional row action is present only when an id exists.
+      '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true }],
     },
   },
 );
