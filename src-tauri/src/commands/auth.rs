@@ -31,11 +31,17 @@ pub async fn login(
         )
         .map_err(|_| AppError::Unauthorized)?;
 
+    let role: String = row.get("role");
+    let branch_id = if role == "ADMIN" {
+        None
+    } else {
+        row.try_get::<String, _>("branch_id").ok()
+    };
     let user = UserSessionDto {
         id: row.get("id"),
         name: row.get("name"),
-        role: row.get("role"),
-        branch_id: row.try_get::<String, _>("branch_id").ok(),
+        role,
+        branch_id,
     };
     sqlx::query("UPDATE users SET last_login_at=CURRENT_TIMESTAMP WHERE id=?")
         .bind(&user.id)
