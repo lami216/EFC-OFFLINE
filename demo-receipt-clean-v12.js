@@ -2,7 +2,7 @@
 // gh-pages only. Removes the duplicate branch/payment row, keeps payment methods at bottom,
 // and places the branch beside the payment date at the top.
 (() => {
-  const esc12 = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc12 = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   const norm12 = (v) => String(v ?? '').trim().toLowerCase().replace(/\s+/g,' ').replace(/[ًٌٍَُِّْـ]/g,'');
   const logo12 = () => document.querySelector('link[rel="icon"]')?.href || '';
 
@@ -13,13 +13,14 @@
     .head12{display:grid;grid-template-columns:240px 1fr 150px;gap:14px;align-items:center;border-bottom:1px solid #b2b8b5;padding-bottom:6px}
     .contact12{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:center;direction:ltr;text-align:left}
     .contact12 img,.logoOnly12 img{width:82px;height:62px;object-fit:contain;object-position:center;display:block}
-    .contact12 b{font-size:13px;line-height:1.35}.contact12 small{font-size:9px;display:block;margin-top:2px}
+    .contact12 b{display:block;font-size:13px;line-height:1.35;white-space:nowrap;direction:ltr;text-align:left}
+    .contact12 small{font-size:9px;display:block;margin-top:2px}
     .center12{text-align:center;direction:rtl}.center12 h1{margin:0;font-size:27px;line-height:1}.center12 .tag12{font-size:11px;font-weight:700;margin-top:3px}
     .rn12{display:flex;direction:ltr;justify-content:center;align-items:center;gap:9px;margin-top:4px;font-size:17px}.rn12 b{font-size:21px}
     .logoOnly12{height:66px;display:grid;place-items:center}
     .meta12{display:flex;justify-content:space-between;align-items:center;gap:24px;direction:ltr;padding:6px 0 3px;font-size:11px}
-    .meta12 .branch12{direction:rtl;text-align:left}.meta12 .branch12 b{font-size:13px;font-weight:900;color:#0b2e24}
-    .meta12 .date12{direction:rtl;text-align:right}.meta12 .date12 b{font-weight:800}
+    .meta12 .branch12{direction:rtl;text-align:right}.meta12 .branch12 b{font-size:13px;font-weight:900;color:#0b2e24}
+    .meta12 .date12{direction:rtl;text-align:left}.meta12 .date12 b{font-weight:800}
     .recognition12{text-align:center;direction:rtl;font-size:11px;font-weight:800;margin:2px 0 4px}
     .row12{display:grid;grid-template-columns:145px minmax(0,1fr) 135px;gap:8px;align-items:center;height:31px;font-size:13px;direction:ltr}
     .fr12{text-align:left;direction:ltr;font-weight:700}.ar12{text-align:right;direction:rtl;font-weight:800}
@@ -49,7 +50,7 @@
   }
 
   function meta12(r){
-    return `<div class="meta12"><div class="branch12">الفرع: <b>${esc12(r.branch||'—')}</b></div><div class="date12">تم الدفع في تاريخ: <b>${fmtDateV3(r.date)}</b></div></div>`;
+    return `<div class="meta12"><div class="date12">تم الدفع في تاريخ: <b>${fmtDateV3(r.date)}</b></div><div class="branch12">الفرع: <b>${esc12(r.branch||'—')}</b></div></div>`;
   }
 
   function methods12(current){
