@@ -28,6 +28,7 @@ jobs:
           node --check demo-period-merge.js
           node --check demo-monthly-finance-v3.js
           node --check demo-receipts-v4.js
+          node --check demo-v5-runtime-guard.js
           node --check demo-brand-receipt-v5.js
       - uses: actions/configure-pages@v5
         with:
