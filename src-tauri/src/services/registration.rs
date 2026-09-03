@@ -176,7 +176,7 @@ pub async fn register(
             i.payment_amount,
             method,
             i.payment_date.as_deref(),
-            None,
+            clean_optional(i.payment_description.clone()),
             actor,
             &billing,
         ).await?)
