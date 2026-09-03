@@ -2,7 +2,7 @@ use super::helpers::{require_role, session};
 use crate::{errors::{AppError, Result}, AppState};
 use sqlx::sqlite::SqliteConnectOptions;
 use std::path::Path;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 fn sql_path(path: &Path) -> String {
     path.to_string_lossy().replace('\'', "''")
@@ -31,6 +31,7 @@ pub async fn backup_database(
 
 #[tauri::command]
 pub async fn restore_database(
+    app: AppHandle,
     state: State<'_, AppState>,
     token: String,
     source: String,
@@ -69,5 +70,9 @@ pub async fn restore_database(
         std::fs::remove_file(&pending)?;
     }
     std::fs::copy(source_path, &pending)?;
-    Ok(pending.to_string_lossy().into_owned())
+
+    // The pending database is applied before SQLite is opened on startup.
+    // Restart immediately so the user never continues working against the old pool
+    // and mistakenly thinks the restored students/payments are missing.
+    app.restart()
 }
