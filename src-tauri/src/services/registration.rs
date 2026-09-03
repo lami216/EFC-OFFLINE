@@ -175,7 +175,8 @@ pub async fn register(
             0,
             i.payment_amount,
             method,
-            Some("دفعة التسجيل".into()),
+            i.payment_date.as_deref(),
+            None,
             actor,
             &billing,
         ).await?)
@@ -227,6 +228,7 @@ pub async fn add_payment(pool: &SqlitePool, i: AddPaymentInput, actor: &str) -> 
         paid_before,
         i.amount,
         &i.payment_method_id,
+        i.payment_date.as_deref(),
         clean_optional(i.description),
         actor,
         &billing,
@@ -273,6 +275,20 @@ async fn new_student(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, i: &Registrat
     Ok(id)
 }
 
+struct AllocationSummary {
+    label: String,
+    wording: String,
+}
+
+fn payment_timestamp(requested: Option<&str>) -> Result<String> {
+    let now = Local::now();
+    if let Some(raw) = requested.map(str::trim).filter(|v| !v.is_empty()) {
+        NaiveDate::parse_from_str(raw, "%Y-%m-%d").map_err(|_| AppError::Validation)?;
+        return Ok(format!("{}T{}{}", raw, now.format("%H:%M:%S"), now.format("%:z")));
+    }
+    Ok(now.to_rfc3339())
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn create_payment(
     tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
@@ -285,6 +301,7 @@ async fn create_payment(
     paid_before: i64,
     amount: i64,
     payment_method_id: &str,
+    payment_date: Option<&str>,
     description: Option<String>,
     actor: &str,
     billing: &str,
@@ -295,19 +312,34 @@ async fn create_payment(
         .await?
         .ok_or(AppError::NotFound)?;
     let payment_id = Uuid::new_v4().to_string();
-    let now = Local::now().to_rfc3339();
+    let paid_at = payment_timestamp(payment_date)?;
     sqlx::query("INSERT INTO payments(id,enrollment_id,amount,payment_method_id,paid_at,description,created_by)VALUES(?,?,?,?,?,?,?)")
         .bind(&payment_id)
         .bind(enrollment_id)
         .bind(amount)
         .bind(payment_method_id)
-        .bind(&now)
-        .bind(description)
+        .bind(&paid_at)
+        .bind(description.as_deref())
         .bind(actor)
         .execute(&mut **tx)
         .await?;
 
-    let period_label = if billing == "monthly" { allocate(tx, &payment_id, enrollment_id, amount).await? } else { None };
+    let allocation = if billing == "monthly" { allocate(tx, &payment_id, enrollment_id, amount).await? } else { None };
+    let period_label = allocation.as_ref().map(|a| a.label.clone());
+    let auto_description = if let Some(a) = allocation.as_ref() {
+        format!("{} لدورة {}", a.wording, specialty_name)
+    } else if paid_before.saturating_add(amount) >= total {
+        format!("مدفوع كامل لدورة {}", specialty_name)
+    } else {
+        format!("مدفوع جزئي لدورة {}", specialty_name)
+    };
+    let final_description = description.unwrap_or(auto_description);
+    sqlx::query("UPDATE payments SET description=? WHERE id=?")
+        .bind(&final_description)
+        .bind(&payment_id)
+        .execute(&mut **tx)
+        .await?;
+
     sqlx::query("UPDATE app_settings SET receipt_last=receipt_last+1,updated_at=CURRENT_TIMESTAMP WHERE id=1")
         .execute(&mut **tx)
         .await?;
@@ -327,13 +359,14 @@ async fn create_payment(
         amount,
         remaining: total.saturating_sub(paid_before.saturating_add(amount)),
         method_name,
-        issued_at: now,
+        issued_at: paid_at,
         center_name: center.get("center_name"),
         center_phone1: center.try_get::<String, _>("phone1").ok(),
         center_phone2: center.try_get::<String, _>("phone2").ok(),
         center_address: center.try_get::<String, _>("address").ok(),
         center_logo_data_url: center.try_get::<String, _>("logo_data_url").ok(),
         period_label,
+        description: Some(final_description),
     };
     let snapshot = serde_json::to_string(&dto).map_err(|_| AppError::Validation)?;
     sqlx::query("INSERT INTO receipts(id,receipt_number,payment_id,enrollment_id,issued_at,snapshot_json)VALUES(?,?,?,?,?,?)")
@@ -348,29 +381,39 @@ async fn create_payment(
     Ok(dto)
 }
 
-async fn allocate(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, payment_id: &str, enrollment_id: &str, mut left: i64) -> Result<Option<String>> {
+async fn allocate(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, payment_id: &str, enrollment_id: &str, mut left: i64) -> Result<Option<AllocationSummary>> {
     let rows = sqlx::query("SELECT b.id,b.period_number,b.amount_due-COALESCE(SUM(CASE WHEN p.status='active' THEN a.amount ELSE 0 END),0) remaining FROM billing_periods b LEFT JOIN payment_allocations a ON a.billing_period_id=b.id LEFT JOIN payments p ON p.id=a.payment_id WHERE b.enrollment_id=? GROUP BY b.id ORDER BY b.period_number")
         .bind(enrollment_id)
         .fetch_all(&mut **tx)
         .await?;
-    let mut labels = Vec::new();
+    let mut allocated: Vec<(i64, i64, i64)> = Vec::new();
     for row in rows {
         if left == 0 { break; }
         let remaining: i64 = row.get("remaining");
-        let amount = left.min(remaining.max(0));
-        if amount > 0 {
+        let used = left.min(remaining.max(0));
+        if used > 0 {
             sqlx::query("INSERT INTO payment_allocations(payment_id,billing_period_id,amount)VALUES(?,?,?)")
                 .bind(payment_id)
                 .bind(row.get::<String, _>("id"))
-                .bind(amount)
+                .bind(used)
                 .execute(&mut **tx)
                 .await?;
-            left -= amount;
-            labels.push(format!("الشهر {}", row.get::<i64, _>("period_number")));
+            left -= used;
+            allocated.push((row.get("period_number"), used, remaining));
         }
     }
     if left > 0 { return Err(AppError::Validation); }
-    Ok(if labels.is_empty() { None } else { Some(labels.join("، ")) })
+    if allocated.is_empty() { return Ok(None); }
+    let labels = allocated.iter().map(|(n,_,_)| format!("الشهر {}", n)).collect::<Vec<_>>();
+    let wording = if allocated.len() == 1 {
+        let (n, used, remaining_before) = allocated[0];
+        if used >= remaining_before { format!("مدفوع الشهر {}", n) } else { format!("مدفوع جزئي من الشهر {}", n) }
+    } else {
+        let nums = allocated.iter().map(|(n,_,_)| n.to_string()).collect::<Vec<_>>().join("، ");
+        let last = allocated.last().expect("allocation exists");
+        if last.1 < last.2 { format!("دفعة للأشهر {} (جزئي في الشهر {})", nums, last.0) } else { format!("مدفوع الأشهر {}", nums) }
+    };
+    Ok(Some(AllocationSummary { label: labels.join("، "), wording }))
 }
 
 fn clean_optional(value: Option<String>) -> Option<String> {
