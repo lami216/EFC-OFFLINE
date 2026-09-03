@@ -31,6 +31,7 @@ jobs:
           node --check demo-v5-runtime-guard.js
           node --check demo-brand-receipt-v5.js
           node --check demo-repair-v6.js
+          node --check demo-receipt-layout-v7.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true
